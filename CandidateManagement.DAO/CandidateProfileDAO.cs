@@ -1,9 +1,11 @@
 ﻿using CandidateManagement.BussinessObject;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace CandidateManagement.DAO
 {
@@ -37,39 +39,70 @@ namespace CandidateManagement.DAO
         }
         public bool AddCandidateProfile(CandidateProfile candidateProfile)
         {
-            //lam them if ID da ton tai
-            CandidateProfile candidate = this.GetCandidateProfileById(candidateProfile.CandidateId);
-
             bool isSuccess = false;
             try
             {
-                if (candidateProfile != null)
+                var existingCandidate = this.GetCandidateProfileById(candidateProfile.CandidateId);
+                if (existingCandidate != null)
                 {
-                    context.CandidateProfiles.Add(candidateProfile);
-                    context.SaveChanges();
-                    isSuccess = true;
+                    throw new Exception("A candidate with this ID already exists.");
                 }
 
+                context.CandidateProfiles.Add(candidateProfile);
+                context.SaveChanges();
+                isSuccess = true;
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                MessageBox.Show($"Error: {ex.Message}");
             }
             return isSuccess;
         }
+
+        //public bool DeleteCandidateProfile(string profileID)
+        //{
+        //    bool isSuccess = false;
+        //    CandidateProfile candidateProfile = this.GetCandidateProfileById(profileID);
+        //    try
+        //    {
+        //        if (candidateProfile != null)
+        //        {
+        //            context.CandidateProfiles.Remove(candidateProfile);
+        //            context.SaveChanges();
+        //            isSuccess = true;
+        //        }
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new Exception(ex.Message);
+        //    }
+        //    return isSuccess;
+        //}
         public bool DeleteCandidateProfile(string profileID)
         {
             bool isSuccess = false;
-            CandidateProfile candidateProfile = this.GetCandidateProfileById(profileID);
+
             try
             {
+                var candidateProfile = context.CandidateProfiles
+                    .AsNoTracking()
+                    .FirstOrDefault(c => c.CandidateId == profileID);
+
                 if (candidateProfile != null)
                 {
+                    var trackedProfile = context.CandidateProfiles.Local
+                        .FirstOrDefault(c => c.CandidateId == profileID);
+
+                    if (trackedProfile != null)
+                    {
+                        context.Entry(trackedProfile).State = EntityState.Detached;
+                    }
+                    context.CandidateProfiles.Attach(candidateProfile);
                     context.CandidateProfiles.Remove(candidateProfile);
                     context.SaveChanges();
                     isSuccess = true;
                 }
-
             }
             catch (Exception ex)
             {
@@ -77,6 +110,8 @@ namespace CandidateManagement.DAO
             }
             return isSuccess;
         }
+
+
         public bool UpdateCandidateProfile(CandidateProfile candidate)
         {
             bool isSuccess = false;

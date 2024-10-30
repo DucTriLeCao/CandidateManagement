@@ -76,27 +76,74 @@ namespace CandidateManagement_StudentName
             txtFullName.Text = "";
             cmbJobPosting.SelectedValue = "";
         }
+        //private void btnAdd_Click(object sender, RoutedEventArgs e)
+        //{
+        //    CandidateProfile candidate = new CandidateProfile();
+        //    candidate.CandidateId = txtCandidateID.Text;
+        //    candidate.Fullname = txtFullName.Text;
+        //    candidate.Birthday = DateTime.Parse(txtBirthday.Text);
+        //    candidate.ProfileUrl = txtImageURL.Text;
+        //    //candidate.Posting = jobPostingService.GetJobPostingById(cmbJobPosting.SelectedValue.ToString());
+        //    candidate.PostingId = cmbJobPosting.SelectedValue.ToString();
+        //    candidate.ProfileShortDescription = txtDescription.Text;
+
+        //    if (profileService.AddCandidateProfile(candidate))
+        //    {
+        //        MessageBox.Show("Add Successfully");
+        //        loadDataInit();
+        //    }
+        //    else
+        //    {
+        //        MessageBox.Show("Failed");
+        //    }
+        //}
         private void btnAdd_Click(object sender, RoutedEventArgs e)
         {
+            CandidateProfile existingCandidate = profileService.GetCandidateProfileById(txtCandidateID.Text);
+
+            if (existingCandidate != null)
+            {
+                MessageBox.Show("A candidate with this ID already exists. Please use a unique ID or update the existing profile.",
+                                "Duplicate Entry", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             CandidateProfile candidate = new CandidateProfile();
             candidate.CandidateId = txtCandidateID.Text;
             candidate.Fullname = txtFullName.Text;
-            candidate.Birthday = DateTime.Parse(txtBirthday.Text);
-            candidate.ProfileUrl = txtImageURL.Text;
-            //candidate.Posting = jobPostingService.GetJobPostingById(cmbJobPosting.SelectedValue.ToString());
-            candidate.PostingId = cmbJobPosting.SelectedValue.ToString();
-            candidate.ProfileShortDescription = txtDescription.Text;
-
-            if (profileService.AddCandidateProfile(candidate))
+            DateTime birthday;
+            if (DateTime.TryParse(txtBirthday.Text, out birthday))
             {
-                MessageBox.Show("Add Successfully");
-                loadDataInit();
+                candidate.Birthday = birthday;
             }
             else
             {
-                MessageBox.Show("Failed");
+                MessageBox.Show("Please enter a valid date for Birthday.", "Invalid Date", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            candidate.ProfileUrl = txtImageURL.Text;
+            candidate.PostingId = cmbJobPosting.SelectedValue?.ToString();
+            candidate.ProfileShortDescription = txtDescription.Text;
+
+            try
+            {
+                if (profileService.AddCandidateProfile(candidate))
+                {
+                    MessageBox.Show("Candidate added successfully.");
+                    loadDataInit();
+                }
+                else
+                {
+                    MessageBox.Show("Failed to add candidate. Please try again.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+
         private void DataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             DataGrid dataGrid = sender as DataGrid;
@@ -108,11 +155,11 @@ namespace CandidateManagement_StudentName
                 CandidateProfile profile = profileService.GetCandidateProfileById(id);
                 if (profile != null)
                 {
-                    txtCandidateID.Text = txtCandidateID.Text;
-                    txtBirthday.Text = txtBirthday.Text;
-                    txtDescription.Text = txtDescription.Text;
-                    txtImageURL.Text = txtImageURL.Text;
-                    txtFullName.Text += txtFullName.Text;
+                    txtCandidateID.Text = profile.CandidateId;
+                    txtBirthday.SelectedDate = profile.Birthday;
+                    txtDescription.Text = profile.ProfileShortDescription;
+                    txtImageURL.Text = profile.ProfileUrl;
+                    txtFullName.Text = profile.Fullname;
                     cmbJobPosting.SelectedValue = profile.PostingId;
 
                 }

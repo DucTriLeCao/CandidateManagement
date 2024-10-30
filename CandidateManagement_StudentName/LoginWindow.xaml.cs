@@ -29,7 +29,7 @@ namespace CandidateManagement_StudentName
         private void btnLogin_Click(object sender, RoutedEventArgs e)
         {
             Hraccount hraccount = hracountServices.GetHraccountByEmail(txtEmail.Text);
-            if (hraccount != null && hraccount.Password.Equals(txtPassword) && hraccount.MemberRole == 1)
+            if (hraccount != null && hraccount.Password.Equals(txtPassword.Text) && hraccount.MemberRole == 1)
             {
                 int? RoleID = hraccount.MemberRole;
                 this.Hide();
@@ -38,7 +38,7 @@ namespace CandidateManagement_StudentName
             }
             else 
             {
-                MessageBox.Show("Good bye");
+                MessageBox.Show("Invalid email or password");
             }
         }
 
